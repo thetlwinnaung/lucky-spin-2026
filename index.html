@@ -1,1328 +1,459 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ကံစမ်းမဲ Spin Wheel - ၇ ဦး သီးသန့်</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Padauk & Noto Sans Myanmar & Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Noto+Sans+Myanmar:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Canvas Confetti -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-    <style>
-        body {
-            font-family: 'Noto Sans Myanmar', 'Inter', sans-serif;
-            background: radial-gradient(circle at top, #1e1b4b 0%, #0f172a 60%, #020617 100%);
-            color: #f8fafc;
-            min-height: 100vh;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .gold-gradient {
-            background: linear-gradient(135deg, #fde047 0%, #eab308 50%, #ca8a04 100%);
-        }
-
-        .gold-text {
-            background: linear-gradient(135deg, #fef08a 0%, #facc15 50%, #eab308 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .glass-card {
-            background: rgba(30, 41, 59, 0.72);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .wheel-outer-ring {
-            box-shadow:
-                0 0 0 8px #eab308,
-                0 0 0 13px #713f12,
-                0 20px 50px rgba(0, 0, 0, 0.75),
-                0 0 40px rgba(234, 179, 8, 0.35);
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(250, 204, 21, 0.5); }
-            50% { transform: scale(1.03); box-shadow: 0 0 32px rgba(250, 204, 21, 0.85); }
-        }
-
-        .spin-btn-active {
-            animation: pulseGlow 2s infinite ease-in-out;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 9999px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucky Spin Wheel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Padauk', sans-serif;
+      background: radial-gradient(circle at top, #1e1b4b, #0f172a);
+      min-height: 100vh;
+      color: #f8fafc;
+    }
+    .wheel-pointer {
+      width: 0;
+      height: 0;
+      border-left: 16px solid transparent;
+      border-right: 16px solid transparent;
+      border-top: 30px solid #facc15;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    }
+  </style>
 </head>
-<body class="antialiased selection:bg-yellow-400 selection:text-slate-900">
+<body class="flex flex-col items-center justify-between p-4">
 
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-30 glass-card border-b border-white/10 px-4 py-3">
-        <div class="max-w-lg mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl gold-gradient flex items-center justify-center text-slate-950 font-extrabold text-lg shadow-md">
-                    🎡
-                </div>
-                <div>
-                    <h1 class="font-bold text-base sm:text-lg leading-tight gold-text">ကံစမ်းမဲ Spin Wheel</h1>
-                    <p class="text-[11px] text-slate-300 flex items-center gap-1.5">
-                        <span id="liveIndicator" class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span id="remainingCounterText">ကျန်ရှိဆုမဲ: ၇ / ၇ ဆု</span>
-                    </p>
-                </div>
-            </div>
+  <!-- Header -->
+  <header class="w-full max-w-lg flex justify-between items-center py-2">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🎡</span>
+      <h1 class="text-xl font-bold text-yellow-400">Lucky Spin</h1>
+    </div>
+    <button onclick="openHostModal()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-full text-slate-300 transition">
+      🔐 ပွဲစီစဉ်သူ
+    </button>
+  </header>
 
-            <div class="flex items-center gap-2">
-                <!-- Sound Toggle -->
-                <button id="soundToggleBtn" type="button" aria-label="အသံ အဖွင့်/အပိတ်" class="p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-white/10 text-yellow-300 transition active:scale-95">
-                    <svg id="soundOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-                    </svg>
-                    <svg id="soundOffIcon" class="w-5 h-5 hidden text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
-                    </svg>
-                </button>
-
-                <!-- Host / Admin Button -->
-                <button id="openHostBtn" type="button" class="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-yellow-500/30 text-xs font-semibold text-yellow-300 flex items-center gap-1.5 transition active:scale-95">
-                    <span>🔐</span>
-                    <span>ပွဲစီစဉ်သူ</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-lg mx-auto px-4 pt-4 pb-16 space-y-5">
-
-        <!-- Loading Banner -->
-        <div id="loadingBanner" class="glass-card rounded-2xl p-4 text-center text-sm text-yellow-200 flex items-center justify-center gap-2">
-            <svg class="animate-spin h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>ဆာဗာနှင့် ချိတ်ဆက်နေပါသည်...</span>
-        </div>
-
-        <!-- Participant Verification / Status Card -->
-        <section id="participantAuthCard" class="glass-card rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5 hidden">
-            <div class="flex items-start justify-between gap-2">
-                <div>
-                    <h2 class="font-bold text-base text-white">ပါဝင်သူ အတည်ပြုရန်</h2>
-                    <p class="text-xs text-slate-300 mt-0.5 leading-relaxed">
-                        တစ်ဦးလျှင် <span class="text-yellow-300 font-semibold">တစ်ကြိမ်သာ</span> လှည့်ခွင့်ရှိပါသည်။ ပွဲစီစဉ်သူ ပေးထားသော ကုဒ်နံပါတ်နှင့် အမည်ကို ဖြည့်သွင်းပါ။
-                    </p>
-                </div>
-                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 shrink-0">
-                    ၁ ကြိမ်သာ
-                </span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label for="playerNameInput" class="block text-xs font-medium text-slate-300 mb-1">သင့်အမည် (Name)</label>
-                    <input id="playerNameInput" type="text" maxlength="25" placeholder="ဥပမာ - မောင်မောင်"
-                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 focus:border-yellow-400 focus:outline-none text-sm text-white placeholder-slate-500">
-                </div>
-                <div>
-                    <label for="spinCodeInput" class="block text-xs font-medium text-slate-300 mb-1">တစ်ခါသုံး ကုဒ် (Spin Code)</label>
-                    <input id="spinCodeInput" type="text" maxlength="12" placeholder="ဥပမာ - LUCKY1"
-                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 focus:border-yellow-400 focus:outline-none text-sm font-mono uppercase tracking-wider text-yellow-300 placeholder-slate-500">
-                </div>
-            </div>
-
-            <div id="authErrorMsg" class="hidden text-xs text-rose-300 bg-rose-950/70 border border-rose-500/40 rounded-xl px-3 py-2"></div>
-
-            <button id="verifyPlayerBtn" type="button"
-                class="w-full py-3 rounded-xl gold-gradient text-slate-950 font-bold text-sm shadow-lg hover:brightness-105 active:scale-[0.99] transition">
-                အတည်ပြုပြီး လှည့်ရန် အသင့်ပြင်မည်
-            </button>
-        </section>
-
-        <!-- Verified Active Player Banner -->
-        <section id="verifiedPlayerBanner" class="glass-card rounded-2xl p-4 border border-emerald-500/40 bg-emerald-950/30 hidden">
-            <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-lg">
-                        ✅
-                    </div>
-                    <div>
-                        <p class="text-xs text-emerald-300 font-medium">အတည်ပြုပြီး (လှည့်ခွင့် ၁ ကြိမ် ရရှိထားသည်)</p>
-                        <p class="text-sm font-bold text-white">
-                            <span id="verifiedNameDisplay">-</span>
-                            <span class="text-xs font-mono text-yellow-300 ml-1.5 px-2 py-0.5 rounded bg-slate-900/80" id="verifiedCodeDisplay">-</span>
-                        </p>
-                    </div>
-                </div>
-                <button id="switchPlayerBtn" type="button" class="text-xs text-slate-300 underline hover:text-white px-2 py-1">
-                    ပြောင်းရန်
-                </button>
-            </div>
-        </section>
-
-        <!-- Already Spun Lock Card (Shows if this phone or code has already spun) -->
-        <section id="alreadySpunCard" class="glass-card rounded-2xl p-5 border border-yellow-500/40 text-center space-y-3 hidden">
-            <div class="w-14 h-14 mx-auto rounded-full bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center text-2xl">
-                🎉
-            </div>
-            <div>
-                <span class="inline-block px-3 py-0.5 rounded-full text-[11px] font-bold bg-yellow-400/20 text-yellow-300 mb-1">
-                    သင် ကံစမ်းပြီးပါပြီ
-                </span>
-                <h2 class="text-lg font-bold text-white" id="lockedPlayerName">ကံထူးရှင်</h2>
-                <p class="text-xs text-slate-300 mt-0.5">ဤဖုန်း (သို့) ဤကုဒ်ဖြင့် တစ်ကြိမ် လှည့်ပြီးဖြစ်ပါသည်</p>
-            </div>
-            <div class="p-3.5 rounded-xl bg-slate-900/90 border border-yellow-400/40">
-                <p class="text-[11px] text-slate-400 mb-1">သင်ရရှိထားသော ဆုမဲ</p>
-                <p id="lockedPrizeDisplay" class="text-base sm:text-lg font-extrabold text-yellow-300 leading-snug">-</p>
-            </div>
-            <button id="viewReceiptAgainBtn" type="button" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/15 text-xs font-semibold text-white transition">
-                📸 Screenshot သိမ်းရန် ဆုလက်မှတ် ပြန်ကြည့်မည်
-            </button>
-        </section>
-
-        <!-- Spin Wheel Section -->
-        <section class="relative flex flex-col items-center pt-2 pb-2">
-            <!-- Top Pointer Arrow -->
-            <div class="relative z-20 -mb-5 drop-shadow-[0_6px_10px_rgba(0,0,0,0.85)]">
-                <svg width="46" height="52" viewBox="0 0 46 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M23 50L4 12C4 6.47715 8.47715 2 14 2H32C37.5228 2 42 6.47715 42 12L23 50Z" fill="url(#pointerGrad)" stroke="#713f12" stroke-width="3"/>
-                    <circle cx="23" cy="13" r="5" fill="#fef08a"/>
-                    <defs>
-                        <linearGradient id="pointerGrad" x1="23" y1="2" x2="23" y2="50" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#fef08a"/>
-                            <stop offset="0.5" stop-color="#facc15"/>
-                            <stop offset="1" stop-color="#ca8a04"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-            </div>
-
-            <!-- Wheel Canvas Wrapper -->
-            <div id="wheelContainer" class="relative w-full max-w-[360px] aspect-square rounded-full wheel-outer-ring bg-slate-900 flex items-center justify-center overflow-hidden">
-                <canvas id="wheelCanvas" class="w-full h-full block"></canvas>
-
-                <!-- Center Hub Button -->
-                <button id="centerSpinBtn" type="button" disabled
-                    class="absolute z-10 w-20 h-20 sm:w-24 sm:h-24 rounded-full gold-gradient border-4 border-amber-950 shadow-[0_0_25px_rgba(0,0,0,0.8)] flex flex-col items-center justify-center text-slate-950 font-extrabold transition transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
-                    <span class="text-sm sm:text-base leading-none">လှည့်မည်</span>
-                    <span class="text-[10px] font-bold tracking-wider mt-0.5 opacity-80">SPIN</span>
-                </button>
-            </div>
-
-            <!-- Main Bottom Spin Button -->
-            <div class="w-full mt-6">
-                <button id="mainSpinBtn" type="button" disabled
-                    class="w-full py-4 rounded-2xl gold-gradient text-slate-950 font-extrabold text-base sm:text-lg shadow-xl transition transform active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none">
-                    အပေါ်တွင် အမည်နှင့် ကုဒ် အရင်ဖြည့်ပါ
-                </button>
-            </div>
-        </section>
-
-        <!-- Prize Pool & Live Winners Board -->
-        <section class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
-            <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
-                <h3 class="font-bold text-sm sm:text-base text-yellow-300 flex items-center gap-2">
-                    <span>🎁</span>
-                    <span>ဆုမဲ ၇ ဆု စာရင်း (တိုက်ရိုက်အခြေအနေ)</span>
-                </h3>
-                <span id="poolBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-200">
-                    ၇ ဆု
-                </span>
-            </div>
-
-            <div id="prizeListContainer" class="space-y-2.5">
-                <!-- Populated dynamically -->
-            </div>
-        </section>
-
-    </main>
-
-    <!-- ===================================================================== -->
-    <!-- CELEBRATION RESULT MODAL                                              -->
-    <!-- ===================================================================== -->
-    <div id="resultModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-        <div class="relative w-full max-w-md rounded-3xl bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 border-2 border-yellow-400/70 p-6 text-center shadow-[0_0_50px_rgba(250,204,21,0.35)] space-y-4">
-            <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-yellow-400/20 border border-yellow-400/40 text-yellow-300 text-xs font-bold">
-                <span>🎊</span>
-                <span>ဂုဏ်ယူပါတယ်! ကံထူးရှင်ဖြစ်ပါသည်</span>
-                <span>🎊</span>
-            </div>
-
-            <div class="space-y-1">
-                <p class="text-xs text-slate-300">ကံထူးရှင် အမည်</p>
-                <h2 id="modalWinnerName" class="text-2xl font-extrabold text-white">-</h2>
-                <p id="modalWinnerCode" class="text-xs font-mono text-yellow-300/90">CODE: -</p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-slate-900/90 border border-yellow-400/50 shadow-inner space-y-1.5">
-                <p class="text-xs text-yellow-200/80 font-medium">သင်ပေါက်သည့် ဆုမဲ</p>
-                <p id="modalWonPrize" class="text-lg sm:text-xl font-extrabold gold-text leading-snug">
-                    -
-                </p>
-                <p id="modalTimestamp" class="text-[11px] text-slate-400 pt-1">-</p>
-            </div>
-
-            <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-200 text-xs leading-relaxed">
-                📸 <strong>Screenshot သိမ်းထားပါ</strong> — ဆုထုတ်ယူရန်အတွက် ဤမျက်နှာပြင်ကို Screenshot ရိုက်ပြီး ပွဲစီစဉ်သူထံ ပြသပေးပါ။
-            </div>
-
-            <button id="closeResultModalBtn" type="button"
-                class="w-full py-3.5 rounded-xl gold-gradient text-slate-950 font-bold text-sm shadow-lg active:scale-95 transition">
-                နားလည်ပါပြီ (ပိတ်မည်)
-            </button>
-        </div>
+  <!-- Main Content -->
+  <main class="w-full max-w-md flex flex-col items-center my-auto py-4">
+    
+    <!-- Wheel Container -->
+    <div class="relative flex items-center justify-center mb-6">
+      <div class="wheel-pointer absolute -top-4 z-20"></div>
+      <div class="p-2 rounded-full bg-gradient-to-tr from-yellow-500 via-amber-300 to-yellow-600 shadow-2xl">
+        <canvas id="wheelCanvas" width="320" height="320" class="rounded-full bg-slate-900"></canvas>
+      </div>
+      <div class="absolute w-12 h-12 rounded-full bg-slate-900 border-4 border-yellow-400 flex items-center justify-center shadow-lg z-10">
+        <span class="text-yellow-400 font-bold text-xs">SPIN</span>
+      </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- HOST / ADMIN PANEL MODAL                                              -->
-    <!-- ===================================================================== -->
-    <div id="hostModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
-        <div class="w-full max-w-lg rounded-3xl bg-slate-900 border border-white/15 p-5 sm:p-6 shadow-2xl my-auto space-y-4">
-            <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-xl">🔐</span>
-                    <h2 class="font-bold text-base sm:text-lg text-white">ပွဲစီစဉ်သူ ထိန်းချုပ်ခန်း (Host Panel)</h2>
-                </div>
-                <button id="closeHostModalBtn" type="button" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300">
-                    ✕
-                </button>
-            </div>
+    <!-- Status / Action Box -->
+    <div id="inputSection" class="w-full bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl">
+      <h2 class="text-center font-bold text-lg text-white mb-1">မဲနှိုက်ရန် အချက်အလက်ဖြည့်ပါ</h2>
+      <p class="text-center text-xs text-slate-400 mb-4">တစ်ဦးလျှင် တစ်ကြိမ်သာ လှည့်ခွင့်ရှိပါသည်</p>
 
-            <!-- PIN Entry Screen -->
-            <div id="hostPinSection" class="space-y-3 py-2">
-                <p class="text-xs text-slate-300">
-                    ပွဲစီစဉ်သူ PIN နံပါတ် ရိုက်ထည့်ပါ (မူလ PIN: <span class="font-mono text-yellow-300 font-bold">1234</span>)
-                </p>
-                <input id="hostPinInput" type="password" inputmode="numeric" maxlength="8" placeholder="PIN နံပါတ် (1234)"
-                    class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 focus:border-yellow-400 focus:outline-none text-center text-lg font-mono tracking-widest text-white">
-                <p id="hostPinError" class="hidden text-xs text-rose-400 text-center">PIN နံပါတ် မှားယွင်းနေပါသည်</p>
-                <button id="unlockHostBtn" type="button"
-                    class="w-full py-3 rounded-xl gold-gradient text-slate-950 font-bold text-sm">
-                    ဖွင့်မည်
-                </button>
-            </div>
-
-            <!-- Unlocked Admin Controls -->
-            <div id="hostDashboardSection" class="hidden space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-                <div class="p-3 rounded-xl bg-indigo-950/60 border border-indigo-500/30 text-xs text-indigo-200 leading-relaxed">
-                    💡 ပါဝင်သူ ၇ ဦးအတွက် အောက်ပါ <strong>တစ်ခါသုံး ကုဒ် (7 Codes)</strong> များကို တစ်ဦးလျှင် တစ်ခုစီ ဝေပေးပါ။ ကုဒ်တစ်ခုကို တစ်ကြိမ်သာ အသုံးပြုနိုင်ပါသည်။
-                </div>
-
-                <!-- 7 Invite Codes & Status List -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">ပါဝင်သူ ၇ ဦး ကုဒ်နှင့် အခြေအနေ</h3>
-                        <button id="copyAllCodesBtn" type="button" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-yellow-300 border border-yellow-500/30">
-                            📋 ကုဒ်အားလုံး ကူးယူမည်
-                        </button>
-                    </div>
-                    <div id="hostCodesList" class="space-y-2">
-                        <!-- Dynamically rendered 7 slots -->
-                    </div>
-                </div>
-
-                <!-- Reset Event Section -->
-                <div class="pt-3 border-t border-white/10 space-y-2.5">
-                    <h4 class="text-xs font-bold text-rose-300">ပွဲအသစ် ပြန်စရန် (Reset Event)</h4>
-                    <p class="text-[11px] text-slate-400">
-                        ဆုမဲ ၇ ဆုလုံးနှင့် ကုဒ် ၇ ခုလုံးကို မူလအတိုင်း ပြန်လည်သတ်မှတ်ပါမည်။ (စက်ထဲတွင် မှတ်ထားသော Lock ကိုလည်း ရှင်းလင်းပေးပါမည်)
-                    </p>
-                    <div id="resetConfirmBox" class="hidden p-3 rounded-xl bg-rose-950/70 border border-rose-500/50 space-y-2">
-                        <p class="text-xs text-rose-200 font-semibold">သေချာပါသလား? လက်ရှိ ကံထူးရှင် မှတ်တမ်းအားလုံး ပျက်သွားပါမည်။</p>
-                        <div class="flex gap-2">
-                            <button id="confirmResetBtn" type="button" class="flex-1 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold">
-                                ဟုတ်ကဲ့၊ အသစ်ပြန်စမည်
-                            </button>
-                            <button id="cancelResetBtn" type="button" class="flex-1 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold">
-                                မလုပ်တော့ပါ
-                            </button>
-                        </div>
-                    </div>
-                    <button id="triggerResetBtn" type="button" class="w-full py-2.5 rounded-xl bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-200 text-xs font-bold transition">
-                        🔄 ပွဲတစ်ခုလုံး အသစ်ပြန်စမည် (Reset)
-                    </button>
-                </div>
-            </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">သင့်နာမည်</label>
+          <input id="playerName" type="text" placeholder="ဥပမာ - အောင်အောင်" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-400" />
         </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">လျှို့ဝှက်ကုဒ် (Secret Code)</label>
+          <input id="secretCode" type="text" placeholder="LUCKY1" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-yellow-400" />
+        </div>
+        <p id="errorMsg" class="text-red-400 text-xs hidden text-center"></p>
+        <button id="spinBtn" onclick="startSpin()" class="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
+          🎯 စတင်လှည့်မည်
+        </button>
+      </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toastMsg" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-slate-800 border border-yellow-400/40 text-yellow-200 text-xs font-semibold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300">
-        ကူးယူပြီးပါပြီ
+    <!-- Already Played / Result Box -->
+    <div id="resultSection" class="w-full bg-slate-800/90 border border-yellow-500/50 rounded-2xl p-6 shadow-xl text-center hidden">
+      <div class="text-4xl mb-2">🎉</div>
+      <p class="text-sm text-slate-300" id="winnerLabel">ဂုဏ်ယူပါတယ်!</p>
+      <div class="my-3 p-4 bg-slate-900/90 border border-yellow-400/40 rounded-xl">
+        <p class="text-xs text-yellow-400 mb-1">သင်ရရှိသော ဆုမဲ</p>
+        <p id="wonPrizeText" class="text-lg font-bold text-white leading-snug"></p>
+      </div>
+      <p class="text-xs text-slate-400">တစ်ဦးလျှင် တစ်ကြိမ်သာ လှည့်ခွင့်ရှိသောကြောင့် ဤစက်မှ ထပ်မံလှည့်၍ မရတော့ပါ။</p>
     </div>
 
-    <!-- Firebase & App Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- Remaining Prizes Info -->
+    <div class="w-full mt-5 bg-slate-900/60 border border-slate-800 rounded-xl p-3">
+      <div class="flex justify-between items-center text-xs text-slate-400 mb-2">
+        <span>ကျန်ရှိနေသော ဆုမဲများ</span>
+        <span id="remainingCount" class="text-yellow-400 font-bold">7 / 7</span>
+      </div>
+      <div id="prizeTags" class="flex flex-wrap gap-1.5"></div>
+    </div>
+  </main>
 
-        // =========================================================================
-        // 1. INITIAL DATA & CONSTANTS (Exact 7 Prizes & 7 One-Time Codes)
-        // =========================================================================
-        const INITIAL_PRIZES = [
-            {
-                id: "prize_1",
-                label: "30,000 MMK",
-                shortLines: ["30,000", "MMK"],
-                color: "#dc2626", // Festive Crimson Red
-                textColor: "#ffffff",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            },
-            {
-                id: "prize_2",
-                label: "20,000 MMK",
-                shortLines: ["20,000", "MMK"],
-                color: "#2563eb", // Royal Blue
-                textColor: "#ffffff",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            },
-            {
-                id: "prize_3",
-                label: "20,000 MMK",
-                shortLines: ["20,000", "MMK"],
-                color: "#059669", // Emerald Green
-                textColor: "#ffffff",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            },
-            {
-                id: "prize_4",
-                label: "10,000 MMK",
-                shortLines: ["10,000", "MMK"],
-                color: "#7c3aed", // Royal Purple
-                textColor: "#ffffff",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            },
-            {
-                id: "prize_5",
-                label: "10,000 MMK",
-                shortLines: ["10,000", "MMK"],
-                color: "#ea580c", // Vibrant Orange
-                textColor: "#ffffff",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            },
-            {
-                id: "prize_6",
-                label: "10,000 MMK",
-                shortLines: ["10,000", "MMK"],
-                color: "#0891b2", // Deep Cyan
-                textColor: "#ffffff",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            },
-            {
-                id: "prize_7",
-                label: "5,000 MMK + Mingalar Mandalay Swimming Pool Pass 2 Ticket + PUPA Oil Sheet",
-                shortLines: ["5,000 MMK +", "Pool Pass 2 +", "PUPA Oil Sheet"],
-                color: "#eab308", // Gold Special Prize
-                textColor: "#0f172a",
-                claimedBy: null,
-                claimedCode: null,
-                claimedAt: null
-            }
-        ];
+  <footer class="text-center text-[11px] text-slate-500 py-2">
+    Fair & Random Lucky Draw System
+  </footer>
 
-        const INITIAL_CODES = [
-            { code: "LUCKY1", used: false, playerName: null, prizeLabel: null, usedAt: null },
-            { code: "LUCKY2", used: false, playerName: null, prizeLabel: null, usedAt: null },
-            { code: "LUCKY3", used: false, playerName: null, prizeLabel: null, usedAt: null },
-            { code: "LUCKY4", used: false, playerName: null, prizeLabel: null, usedAt: null },
-            { code: "LUCKY5", used: false, playerName: null, prizeLabel: null, usedAt: null },
-            { code: "LUCKY6", used: false, playerName: null, prizeLabel: null, usedAt: null },
-            { code: "LUCKY7", used: false, playerName: null, prizeLabel: null, usedAt: null }
-        ];
+  <!-- Host Modal -->
+  <div id="hostModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-lg text-yellow-400">🔐 ပွဲစီစဉ်သူ ထိန်းချုပ်ခန်း</h3>
+        <button onclick="closeHostModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+      </div>
 
-        const HOST_PIN = "1234";
-        const LOCAL_STORAGE_KEY = "mm_spinwheel_7_claimed_record_v1";
+      <!-- PIN Gate -->
+      <div id="pinGate" class="space-y-3">
+        <p class="text-xs text-slate-300">ဆက်လက်ကြည့်ရှုရန် PIN နံပါတ် ရိုက်ထည့်ပါ (Default: 1234)</p>
+        <input id="hostPinInput" type="password" placeholder="PIN" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white" />
+        <p id="pinError" class="text-red-400 text-xs hidden">PIN မှားယွင်းနေပါသည်</p>
+        <button onclick="verifyPin()" class="w-full bg-yellow-500 text-slate-950 font-bold py-2.5 rounded-xl">ဝင်မည်</button>
+      </div>
 
-        // =========================================================================
-        // 2. SOUND EFFECTS ENGINE (Web Audio API - Zero External URLs)
-        // =========================================================================
-        class SoundController {
-            constructor() {
-                this.ctx = null;
-                this.muted = false;
-            }
+      <!-- Host Dashboard -->
+      <div id="hostDashboard" class="hidden space-y-4">
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-xs font-bold text-slate-300">တစ်ခါသုံး ကုဒ် ၇ ခု</span>
+            <button onclick="copyAllCodes()" class="text-xs text-yellow-400 hover:underline">ကုဒ်အားလုံး ကူးယူမည်</button>
+          </div>
+          <div id="codeStatusList" class="grid grid-cols-2 gap-2 text-xs"></div>
+        </div>
 
-            init() {
-                if (!this.ctx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    if (AudioCtx) this.ctx = new AudioCtx();
-                }
-                if (this.ctx && this.ctx.state === "suspended") {
-                    this.ctx.resume();
-                }
-            }
+        <div>
+          <span class="block text-xs font-bold text-slate-300 mb-1.5">ဆုမဲပေါက်သူ စာရင်း</span>
+          <div id="winnerLogList" class="space-y-2 text-xs bg-slate-900 p-3 rounded-xl max-h-48 overflow-y-auto">
+            <p class="text-slate-500 text-center">မည်သူမျှ မလှည့်ရသေးပါ</p>
+          </div>
+        </div>
 
-            playTick() {
-                if (this.muted) return;
-                this.init();
-                if (!this.ctx) return;
+        <div class="pt-2 border-t border-slate-700">
+          <button onclick="resetGame()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm transition">
+            🔄 အားလုံးကို Reset ပြန်ချမည် (Device Lock ပါ ဖြုတ်မည်)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = "triangle";
-                osc.frequency.setValueAtTime(680, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(220, this.ctx.currentTime + 0.035);
+  <script>
+    const INITIAL_PRIZES = [
+      { id: 1, label: "30000MMK", short: "30,000 MMK", color: "#ef4444" },
+      { id: 2, label: "20000MMK", short: "20,000 MMK", color: "#f59e0b" },
+      { id: 3, label: "20000MMK", short: "20,000 MMK", color: "#10b981" },
+      { id: 4, label: "10000MMK", short: "10,000 MMK", color: "#3b82f6" },
+      { id: 5, label: "10000MMK", short: "10,000 MMK", color: "#8b5cf6" },
+      { id: 6, label: "10000MMK", short: "10,000 MMK", color: "#ec4899" },
+      { id: 7, label: "5000MMK + Mingalar Mandalay Swimming Pool Pass 2 Ticket + PUPA Oil Sheet", short: "5,000 + Pool & Oil", color: "#14b8a6" }
+    ];
 
-                gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.035);
+    const VALID_CODES = ["LUCKY1", "LUCKY2", "LUCKY3", "LUCKY4", "LUCKY5", "LUCKY6", "LUCKY7"];
+    const HOST_PIN = "1234";
+    const STORAGE_KEY = "lucky_spin_state_v2";
+    const DEVICE_LOCK_KEY = "lucky_spin_device_lock_v2";
 
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-                osc.start();
-                osc.stop(this.ctx.currentTime + 0.04);
-            }
+    let appState = loadState();
+    let currentRotation = 0;
+    let isSpinning = false;
 
-            playWin() {
-                if (this.muted) return;
-                this.init();
-                if (!this.ctx) return;
+    function createFreshState() {
+      return {
+        sessionId: "session_" + Date.now(),
+        prizes: INITIAL_PRIZES.map(p => ({ ...p, claimed: false })),
+        usedCodes: {},
+        winners: []
+      };
+    }
 
-                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-                notes.forEach((freq, idx) => {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    const start = this.ctx.currentTime + idx * 0.11;
-
-                    osc.type = "sine";
-                    osc.frequency.setValueAtTime(freq, start);
-
-                    gain.gain.setValueAtTime(0.22, start);
-                    gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
-
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(start);
-                    osc.stop(start + 0.46);
-                });
-            }
+    function loadState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.sessionId && Array.isArray(parsed.prizes)) {
+            return parsed;
+          }
         }
+      } catch (e) {}
+      const fresh = createFreshState();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+      return fresh;
+    }
 
-        const sound = new SoundController();
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      syncUI();
+    }
 
-        // =========================================================================
-        // 3. APPLICATION STATE & FIREBASE SETUP
-        // =========================================================================
-        let db = null;
-        let auth = null;
-        let currentUser = null;
-        let eventDocRef = null;
+    // Listen to changes across tabs
+    window.addEventListener("storage", (e) => {
+      if (e.key === STORAGE_KEY) {
+        appState = loadState();
+        syncUI();
+      }
+    });
 
-        let gameState = {
-            eventEpoch: 1,
-            prizes: JSON.parse(JSON.stringify(INITIAL_PRIZES)),
-            codes: JSON.parse(JSON.stringify(INITIAL_CODES))
-        };
-
-        let verifiedSession = null; // { name, code }
-        let isSpinning = false;
-        let currentRotation = 0; // in radians
-        let lastTickSlice = -1;
-
-        // DOM Elements
-        const loadingBanner = document.getElementById("loadingBanner");
-        const remainingCounterText = document.getElementById("remainingCounterText");
-        const participantAuthCard = document.getElementById("participantAuthCard");
-        const verifiedPlayerBanner = document.getElementById("verifiedPlayerBanner");
-        const alreadySpunCard = document.getElementById("alreadySpunCard");
-        const playerNameInput = document.getElementById("playerNameInput");
-        const spinCodeInput = document.getElementById("spinCodeInput");
-        const authErrorMsg = document.getElementById("authErrorMsg");
-        const verifyPlayerBtn = document.getElementById("verifyPlayerBtn");
-        const switchPlayerBtn = document.getElementById("switchPlayerBtn");
-        const verifiedNameDisplay = document.getElementById("verifiedNameDisplay");
-        const verifiedCodeDisplay = document.getElementById("verifiedCodeDisplay");
-        const centerSpinBtn = document.getElementById("centerSpinBtn");
-        const mainSpinBtn = document.getElementById("mainSpinBtn");
-        const prizeListContainer = document.getElementById("prizeListContainer");
-        const poolBadge = document.getElementById("poolBadge");
-        const wheelCanvas = document.getElementById("wheelCanvas");
-        const ctx = wheelCanvas.getContext("2d");
-
-        // Modal Elements
-        const resultModal = document.getElementById("resultModal");
-        const modalWinnerName = document.getElementById("modalWinnerName");
-        const modalWinnerCode = document.getElementById("modalWinnerCode");
-        const modalWonPrize = document.getElementById("modalWonPrize");
-        const modalTimestamp = document.getElementById("modalTimestamp");
-        const closeResultModalBtn = document.getElementById("closeResultModalBtn");
-        const viewReceiptAgainBtn = document.getElementById("viewReceiptAgainBtn");
-
-        // Host Modal Elements
-        const hostModal = document.getElementById("hostModal");
-        const openHostBtn = document.getElementById("openHostBtn");
-        const closeHostModalBtn = document.getElementById("closeHostModalBtn");
-        const hostPinSection = document.getElementById("hostPinSection");
-        const hostDashboardSection = document.getElementById("hostDashboardSection");
-        const hostPinInput = document.getElementById("hostPinInput");
-        const hostPinError = document.getElementById("hostPinError");
-        const unlockHostBtn = document.getElementById("unlockHostBtn");
-        const hostCodesList = document.getElementById("hostCodesList");
-        const copyAllCodesBtn = document.getElementById("copyAllCodesBtn");
-        const triggerResetBtn = document.getElementById("triggerResetBtn");
-        const resetConfirmBox = document.getElementById("resetConfirmBox");
-        const confirmResetBtn = document.getElementById("confirmResetBtn");
-        const cancelResetBtn = document.getElementById("cancelResetBtn");
-
-        // =========================================================================
-        // 4. HELPER UTILITIES
-        // =========================================================================
-        function showToast(message) {
-            const toast = document.getElementById("toastMsg");
-            toast.textContent = message;
-            toast.classList.remove("opacity-0");
-            toast.classList.add("opacity-100");
-            setTimeout(() => {
-                toast.classList.remove("opacity-100");
-                toast.classList.add("opacity-0");
-            }, 2400);
+    function checkDeviceLock() {
+      try {
+        const lockRaw = localStorage.getItem(DEVICE_LOCK_KEY);
+        if (!lockRaw) return null;
+        const lockData = JSON.parse(lockRaw);
+        // Only lock if the lock belongs to the CURRENT active session
+        if (lockData.sessionId === appState.sessionId) {
+          return lockData;
+        } else {
+          // Session was reset by Host -> automatically clear old device lock!
+          localStorage.removeItem(DEVICE_LOCK_KEY);
+          return null;
         }
+      } catch (e) {
+        localStorage.removeItem(DEVICE_LOCK_KEY);
+        return null;
+      }
+    }
 
-        function copyTextFallback(text) {
-            const textarea = document.createElement("textarea");
-            textarea.value = text;
-            textarea.style.position = "fixed";
-            textarea.style.opacity = "0";
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand("copy");
-                showToast("ကူးယူပြီးပါပြီ ✓");
-            } catch (err) {
-                showToast("ကူးယူ၍ မရပါ");
-            }
-            document.body.removeChild(textarea);
+    function drawWheel() {
+      const canvas = document.getElementById("wheelCanvas");
+      const ctx = canvas.getContext("2d");
+      const size = canvas.width;
+      const center = size / 2;
+      const radius = center - 6;
+      const prizes = appState.prizes;
+      const sliceAngle = (2 * Math.PI) / prizes.length;
+
+      ctx.clearRect(0, 0, size, size);
+
+      prizes.forEach((prize, i) => {
+        const startAngle = currentRotation + i * sliceAngle - Math.PI / 2;
+        const endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        ctx.fillStyle = prize.claimed ? "#334155" : prize.color;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#0f172a";
+        ctx.stroke();
+
+        // Text
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = "right";
+        ctx.fillStyle = prize.claimed ? "#64748b" : "#ffffff";
+        ctx.font = "bold 12px Padauk, sans-serif";
+        const text = prize.claimed ? "ပေါက်ပြီး" : prize.short;
+        ctx.fillText(text, radius - 14, 4);
+        ctx.restore();
+      });
+    }
+
+    function syncUI() {
+      drawWheel();
+
+      // Update remaining prizes
+      const remaining = appState.prizes.filter(p => !p.claimed);
+      document.getElementById("remainingCount").textContent = `${remaining.length} / ${appState.prizes.length}`;
+
+      const tagsEl = document.getElementById("prizeTags");
+      tagsEl.innerHTML = appState.prizes.map(p => `
+        <span class="px-2 py-0.5 rounded text-[11px] ${p.claimed ? 'bg-slate-800 text-slate-500 line-through' : 'bg-slate-800 text-slate-200 border border-slate-700'}">
+          ${p.short}
+        </span>
+      `).join("");
+
+      // Check Device Lock for current session
+      const lockInfo = checkDeviceLock();
+      const inputSec = document.getElementById("inputSection");
+      const resultSec = document.getElementById("resultSection");
+
+      if (lockInfo && !isSpinning) {
+        inputSec.classList.add("hidden");
+        resultSec.classList.remove("hidden");
+        document.getElementById("winnerLabel").textContent = `ဂုဏ်ယူပါတယ် ${lockInfo.name}!`;
+        document.getElementById("wonPrizeText").textContent = lockInfo.prize;
+      } else if (!isSpinning) {
+        inputSec.classList.remove("hidden");
+        resultSec.classList.add("hidden");
+      }
+
+      renderHostDashboard();
+    }
+
+    function startSpin() {
+      if (isSpinning) return;
+
+      const name = document.getElementById("playerName").value.trim();
+      const code = document.getElementById("secretCode").value.trim().toUpperCase();
+      const errorEl = document.getElementById("errorMsg");
+
+      errorEl.classList.add("hidden");
+
+      if (!name) {
+        showError("ကျေးဇူးပြု၍ သင့်နာမည် ရိုက်ထည့်ပါ။");
+        return;
+      }
+      if (!VALID_CODES.includes(code)) {
+        showError("လျှို့ဝှက်ကုဒ် မှားယွင်းနေပါသည်။");
+        return;
+      }
+      if (appState.usedCodes[code]) {
+        showError("ဤကုဒ်ကို အသုံးပြုပြီး ဖြစ်ပါသည်။");
+        return;
+      }
+
+      const availableIndices = appState.prizes
+        .map((p, idx) => (!p.claimed ? idx : -1))
+        .filter(idx => idx !== -1);
+
+      if (availableIndices.length === 0) {
+        showError("ဆုမဲများ အားလုံး ကုန်သွားပါပြီ။");
+        return;
+      }
+
+      // Pick random available prize
+      const targetIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      const wonPrize = appState.prizes[targetIndex];
+
+      // Mark claimed immediately
+      isSpinning = true;
+      document.getElementById("spinBtn").disabled = true;
+      document.getElementById("spinBtn").textContent = "🎡 လှည့်နေပါသည်...";
+
+      appState.prizes[targetIndex].claimed = true;
+      appState.usedCodes[code] = name;
+      appState.winners.push({
+        name,
+        code,
+        prize: wonPrize.label,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      // Save device lock tied to current sessionId
+      localStorage.setItem(DEVICE_LOCK_KEY, JSON.stringify({
+        sessionId: appState.sessionId,
+        name,
+        code,
+        prize: wonPrize.label
+      }));
+
+      saveState();
+
+      // Calculate target angle so pointer at top (-PI/2) lands on targetIndex
+      const sliceAngle = (2 * Math.PI) / appState.prizes.length;
+      const sliceCenter = targetIndex * sliceAngle + sliceAngle / 2;
+      const extraSpins = 6 * 2 * Math.PI;
+      const targetRotation = extraSpins + (2 * Math.PI - sliceCenter);
+
+      const duration = 4500;
+      const startTime = performance.now();
+      const startRot = currentRotation % (2 * Math.PI);
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 4);
+
+        currentRotation = startRot + (targetRotation - startRot) * easeOut;
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          document.getElementById("spinBtn").disabled = false;
+          document.getElementById("spinBtn").textContent = "🎯 စတင်လှည့်မည်";
+          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+          syncUI();
         }
-
-        function getLocalClaimRecord() {
-            try {
-                const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-                if (!raw) return null;
-                const parsed = JSON.parse(raw);
-                // Only valid if from the same eventEpoch
-                if (parsed && parsed.eventEpoch === gameState.eventEpoch) {
-                    return parsed;
-                }
-                return null;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        function setLocalClaimRecord(record) {
-            try {
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-                    ...record,
-                    eventEpoch: gameState.eventEpoch
-                }));
-            } catch (e) {
-                // Ignore storage quota errors
-            }
-        }
-
-        function formatMyanmarTime(isoString) {
-            if (!isoString) return "";
-            try {
-                const d = new Date(isoString);
-                return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-            } catch (e) {
-                return "";
-            }
-        }
-
-        // =========================================================================
-        // 5. CANVAS WHEEL DRAWING (Responsive + Claimed Greying Out)
-        // =========================================================================
-        function resizeCanvas() {
-            const container = document.getElementById("wheelContainer");
-            if (!container) return;
-            const rect = container.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            wheelCanvas.width = rect.width * dpr;
-            wheelCanvas.height = rect.height * dpr;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            drawWheel();
-        }
-
-        function drawWheel() {
-            const container = document.getElementById("wheelContainer");
-            if (!container) return;
-            const size = container.getBoundingClientRect().width;
-            if (size <= 0) return;
-
-            const center = size / 2;
-            const radius = center - 4;
-            const slices = gameState.prizes;
-            const sliceCount = slices.length;
-            const arc = (Math.PI * 2) / sliceCount;
-
-            ctx.clearRect(0, 0, size, size);
-
-            slices.forEach((prize, i) => {
-                // Top pointer is at -PI/2 (12 o'clock)
-                const startAngle = currentRotation + i * arc - Math.PI / 2;
-                const endAngle = startAngle + arc;
-                const isClaimed = Boolean(prize.claimedBy);
-
-                // Draw Slice Wedge
-                ctx.beginPath();
-                ctx.moveTo(center, center);
-                ctx.arc(center, center, radius, startAngle, endAngle);
-                ctx.closePath();
-
-                ctx.fillStyle = isClaimed ? "#1e293b" : prize.color;
-                ctx.fill();
-
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = isClaimed ? "#334155" : "#fef08a";
-                ctx.stroke();
-
-                // Draw Outer Rim Peg Dot
-                const pegAngle = startAngle;
-                const pegX = center + Math.cos(pegAngle) * (radius - 8);
-                const pegY = center + Math.sin(pegAngle) * (radius - 8);
-                ctx.beginPath();
-                ctx.arc(pegX, pegY, 3.2, 0, Math.PI * 2);
-                ctx.fillStyle = "#fef08a";
-                ctx.fill();
-
-                // Draw Slice Label Text
-                ctx.save();
-                ctx.translate(center, center);
-                ctx.rotate(startAngle + arc / 2);
-
-                ctx.textAlign = "right";
-                ctx.textBaseline = "middle";
-                ctx.fillStyle = isClaimed ? "#64748b" : prize.textColor;
-
-                const lines = isClaimed ? ["ပေါက်ပြီး", `(${prize.claimedBy})`] : prize.shortLines;
-                const baseFontSize = size < 320 ? 11 : 12.5;
-                ctx.font = `700 ${baseFontSize}px "Noto Sans Myanmar", "Inter", sans-serif`;
-
-                const textRadius = radius - 18;
-                const lineHeight = baseFontSize + 3;
-                const totalHeight = (lines.length - 1) * lineHeight;
-
-                lines.forEach((line, lineIdx) => {
-                    const yOffset = -totalHeight / 2 + lineIdx * lineHeight;
-                    ctx.fillText(line, textRadius, yOffset);
-                });
-
-                ctx.restore();
-            });
-        }
-
-        // =========================================================================
-        // 6. UI SYNCHRONIZATION & RENDERING
-        // =========================================================================
-        function updateUI() {
-            const remainingCount = gameState.prizes.filter(p => !p.claimedBy).length;
-            remainingCounterText.textContent = `ကျန်ရှိဆုမဲ: ${remainingCount} / 7 ဆု`;
-            poolBadge.textContent = `ကျန် ${remainingCount} ဆု`;
-
-            // Render Live Prize Board
-            prizeListContainer.innerHTML = "";
-            gameState.prizes.forEach((prize, index) => {
-                const claimed = Boolean(prize.claimedBy);
-                const item = document.createElement("div");
-                item.className = `p-3 rounded-xl border flex items-center justify-between gap-3 transition ${
-                    claimed
-                        ? "bg-slate-900/50 border-slate-800 opacity-75"
-                        : "bg-slate-900/90 border-white/10"
-                }`;
-
-                item.innerHTML = `
-                    <div class="flex items-start gap-2.5 min-w-0">
-                        <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5"
-                              style="background:${claimed ? '#334155' : prize.color}; color:${claimed ? '#94a3b8' : prize.textColor}">
-                            ${index + 1}
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-xs sm:text-sm font-bold leading-snug ${claimed ? 'line-through text-slate-400' : 'text-white'}">
-                                ${prize.label}
-                            </p>
-                            ${
-                                claimed
-                                    ? `<p class="text-[11px] text-emerald-400 font-medium mt-0.5">🎉 ကံထူးရှင်: <strong>${prize.claimedBy}</strong> (${prize.claimedCode})</p>`
-                                    : `<p class="text-[11px] text-yellow-300/80 mt-0.5">✨ မပေါက်သေးပါ (ရရှိနိုင်သေးသည်)</p>`
-                            }
-                        </div>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 ${
-                        claimed
-                            ? "bg-slate-800 text-slate-400"
-                            : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                    }">
-                        ${claimed ? "ထွက်ပြီး" : "ကျန်သေးသည်"}
-                    </span>
-                `;
-                prizeListContainer.appendChild(item);
-            });
-
-            // Check Device Lock (1 spin per phone)
-            const localClaim = getLocalClaimRecord();
-            if (localClaim) {
-                participantAuthCard.classList.add("hidden");
-                verifiedPlayerBanner.classList.add("hidden");
-                alreadySpunCard.classList.remove("hidden");
-
-                document.getElementById("lockedPlayerName").textContent = `${localClaim.playerName} (${localClaim.code})`;
-                document.getElementById("lockedPrizeDisplay").textContent = localClaim.prizeLabel;
-
-                centerSpinBtn.disabled = true;
-                mainSpinBtn.disabled = true;
-                mainSpinBtn.classList.remove("spin-btn-active");
-                mainSpinBtn.textContent = "သင် ကံစမ်းပြီးပါပြီ (၁ ကြိမ်သာ)";
-            } else if (remainingCount === 0) {
-                // All 7 prizes claimed
-                participantAuthCard.classList.add("hidden");
-                verifiedPlayerBanner.classList.add("hidden");
-                alreadySpunCard.classList.add("hidden");
-
-                centerSpinBtn.disabled = true;
-                mainSpinBtn.disabled = true;
-                mainSpinBtn.classList.remove("spin-btn-active");
-                mainSpinBtn.textContent = "ဆုမဲ ၇ ဆုလုံး ကုန်သွားပါပြီ 🎉";
-            } else if (verifiedSession) {
-                // Check if verifiedSession code was used elsewhere
-                const codeObj = gameState.codes.find(c => c.code === verifiedSession.code);
-                if (!codeObj || codeObj.used) {
-                    verifiedSession = null;
-                    updateUI();
-                    return;
-                }
-
-                participantAuthCard.classList.add("hidden");
-                alreadySpunCard.classList.add("hidden");
-                verifiedPlayerBanner.classList.remove("hidden");
-
-                verifiedNameDisplay.textContent = verifiedSession.name;
-                verifiedCodeDisplay.textContent = verifiedSession.code;
-
-                if (!isSpinning) {
-                    centerSpinBtn.disabled = false;
-                    mainSpinBtn.disabled = false;
-                    mainSpinBtn.classList.add("spin-btn-active");
-                    mainSpinBtn.textContent = "🎡 အခုပဲ လှည့်မည် (SPIN NOW)";
-                }
-            } else {
-                // Needs verification
-                participantAuthCard.classList.remove("hidden");
-                verifiedPlayerBanner.classList.add("hidden");
-                alreadySpunCard.classList.add("hidden");
-
-                centerSpinBtn.disabled = true;
-                mainSpinBtn.disabled = true;
-                mainSpinBtn.classList.remove("spin-btn-active");
-                mainSpinBtn.textContent = "အပေါ်တွင် အမည်နှင့် ကုဒ် အရင်ဖြည့်ပါ";
-            }
-
-            renderHostPanelList();
-            drawWheel();
-        }
-
-        function renderHostPanelList() {
-            hostCodesList.innerHTML = "";
-            gameState.codes.forEach((item, idx) => {
-                const row = document.createElement("div");
-                row.className = `p-3 rounded-xl border flex items-center justify-between gap-2 ${
-                    item.used ? "bg-slate-950/80 border-emerald-500/30" : "bg-slate-800/70 border-white/10"
-                }`;
-
-                row.innerHTML = `
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-400">#${idx + 1}</span>
-                            <span class="font-mono font-bold text-sm text-yellow-300">${item.code}</span>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                                item.used ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700 text-slate-300"
-                            }">
-                                ${item.used ? "အသုံးပြုပြီး" : "မသုံးရသေး"}
-                            </span>
-                        </div>
-                        ${
-                            item.used
-                                ? `<p class="text-xs text-white mt-1 truncate">👤 <strong>${item.playerName}</strong> → <span class="text-yellow-300">${item.prizeLabel}</span></p>`
-                                : `<p class="text-[11px] text-slate-400 mt-0.5">ပါဝင်သူ ၁ ဦးကို ဤကုဒ် ပေးနိုင်ပါသည်</p>`
-                        }
-                    </div>
-                    ${
-                        !item.used
-                            ? `<button type="button" data-copy-code="${item.code}" class="copy-single-code px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-950 border border-white/10 text-[11px] font-semibold text-yellow-300 shrink-0">
-                                ကူးယူမည်
-                               </button>`
-                            : `<span class="text-emerald-400 text-base shrink-0">✅</span>`
-                    }
-                `;
-                hostCodesList.appendChild(row);
-            });
-
-            document.querySelectorAll(".copy-single-code").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    const code = btn.getAttribute("data-copy-code");
-                    copyTextFallback(`ကံစမ်းမဲ Spin Code: ${code}`);
-                });
-            });
-        }
-
-        // =========================================================================
-        // 7. PLAYER VERIFICATION & ATOMIC SPIN TRANSACTION
-        // =========================================================================
-        verifyPlayerBtn.addEventListener("click", () => {
-            authErrorMsg.classList.add("hidden");
-            const rawName = playerNameInput.value.trim();
-            const rawCode = spinCodeInput.value.trim().toUpperCase();
-
-            if (!rawName) {
-                authErrorMsg.textContent = "ကျေးဇူးပြု၍ သင့်အမည်ကို ထည့်သွင်းပါ။";
-                authErrorMsg.classList.remove("hidden");
-                return;
-            }
-            if (!rawCode) {
-                authErrorMsg.textContent = "ကျေးဇူးပြု၍ တစ်ခါသုံး ကုဒ်နံပါတ် (Spin Code) ကို ထည့်သွင်းပါ။";
-                authErrorMsg.classList.remove("hidden");
-                return;
-            }
-
-            if (getLocalClaimRecord()) {
-                updateUI();
-                return;
-            }
-
-            const matchedCode = gameState.codes.find(c => c.code.toUpperCase() === rawCode);
-            if (!matchedCode) {
-                authErrorMsg.textContent = "ကုဒ်နံပါတ် မှားယွင်းနေပါသည်။ ပွဲစီစဉ်သူ ပေးထားသော ကုဒ် (ဥပမာ LUCKY1) ကို စစ်ဆေးပါ။";
-                authErrorMsg.classList.remove("hidden");
-                return;
-            }
-            if (matchedCode.used) {
-                authErrorMsg.textContent = `ဤကုဒ် (${rawCode}) ကို "${matchedCode.playerName}" က အသုံးပြုပြီး ဖြစ်ပါသည်။`;
-                authErrorMsg.classList.remove("hidden");
-                return;
-            }
-
-            verifiedSession = {
-                name: rawName,
-                code: rawCode
-            };
-            sound.init();
-            updateUI();
-            showToast(`ကြိုဆိုပါတယ် ${rawName}! အခု လှည့်နိုင်ပါပြီ 🎡`);
-        });
-
-        switchPlayerBtn.addEventListener("click", () => {
-            if (isSpinning) return;
-            verifiedSession = null;
-            updateUI();
-        });
-
-        async function executeSpin() {
-            if (isSpinning || !verifiedSession || getLocalClaimRecord()) return;
-
-            isSpinning = true;
-            centerSpinBtn.disabled = true;
-            mainSpinBtn.disabled = true;
-            mainSpinBtn.classList.remove("spin-btn-active");
-            mainSpinBtn.textContent = "ဆုမဲ ရွေးချယ်နေပါသည်...";
-            sound.init();
-
-            const playerName = verifiedSession.name;
-            const playerCode = verifiedSession.code;
-            let wonPrizeIndex = -1;
-            let wonPrizeData = null;
-            let claimedTimestamp = new Date().toISOString();
-
-            try {
-                if (db && eventDocRef) {
-                    // Atomic Firestore Transaction so 2 phones NEVER claim the same prize or reuse a code!
-                    await runTransaction(db, async (transaction) => {
-                        const snap = await transaction.get(eventDocRef);
-                        if (!snap.exists()) {
-                            throw new Error("EVENT_NOT_FOUND");
-                        }
-                        const data = snap.data();
-                        const codes = data.codes || [];
-                        const prizes = data.prizes || [];
-
-                        const codeIdx = codes.findIndex(c => c.code === playerCode);
-                        if (codeIdx === -1 || codes[codeIdx].used) {
-                            throw new Error("CODE_ALREADY_USED");
-                        }
-
-                        const availableIndices = [];
-                        prizes.forEach((p, idx) => {
-                            if (!p.claimedBy) availableIndices.push(idx);
-                        });
-
-                        if (availableIndices.length === 0) {
-                            throw new Error("NO_PRIZES_LEFT");
-                        }
-
-                        // Cryptographically fair random choice among remaining unclaimed prizes
-                        const randomBuffer = new Uint32Array(1);
-                        window.crypto.getRandomValues(randomBuffer);
-                        const chosenSlot = availableIndices[randomBuffer[0] % availableIndices.length];
-
-                        wonPrizeIndex = chosenSlot;
-                        wonPrizeData = { ...prizes[chosenSlot] };
-
-                        prizes[chosenSlot] = {
-                            ...prizes[chosenSlot],
-                            claimedBy: playerName,
-                            claimedCode: playerCode,
-                            claimedAt: claimedTimestamp
-                        };
-
-                        codes[codeIdx] = {
-                            ...codes[codeIdx],
-                            used: true,
-                            playerName: playerName,
-                            prizeLabel: wonPrizeData.label,
-                            usedAt: claimedTimestamp
-                        };
-
-                        transaction.update(eventDocRef, {
-                            prizes: prizes,
-                            codes: codes
-                        });
-                    });
-                } else {
-                    // Fallback in-memory transaction if Firebase config is absent
-                    const codeIdx = gameState.codes.findIndex(c => c.code === playerCode);
-                    if (codeIdx === -1 || gameState.codes[codeIdx].used) {
-                        throw new Error("CODE_ALREADY_USED");
-                    }
-                    const availableIndices = gameState.prizes
-                        .map((p, idx) => (!p.claimedBy ? idx : -1))
-                        .filter(idx => idx !== -1);
-
-                    if (availableIndices.length === 0) {
-                        throw new Error("NO_PRIZES_LEFT");
-                    }
-
-                    const chosenSlot = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-                    wonPrizeIndex = chosenSlot;
-                    wonPrizeData = { ...gameState.prizes[chosenSlot] };
-
-                    gameState.prizes[chosenSlot].claimedBy = playerName;
-                    gameState.prizes[chosenSlot].claimedCode = playerCode;
-                    gameState.prizes[chosenSlot].claimedAt = claimedTimestamp;
-
-                    gameState.codes[codeIdx].used = true;
-                    gameState.codes[codeIdx].playerName = playerName;
-                    gameState.codes[codeIdx].prizeLabel = wonPrizeData.label;
-                    gameState.codes[codeIdx].usedAt = claimedTimestamp;
-                }
-            } catch (err) {
-                isSpinning = false;
-                if (err.message === "CODE_ALREADY_USED") {
-                    showToast("ဤကုဒ်ကို အသုံးပြုပြီး ဖြစ်နေပါသည်!");
-                    verifiedSession = null;
-                } else if (err.message === "NO_PRIZES_LEFT") {
-                    showToast("ဆုမဲအားလုံး ကုန်သွားပါပြီ!");
-                } else {
-                    showToast("ချိတ်ဆက်မှု အခက်အခဲရှိပါသည်၊ ထပ်မံကြိုးစားပါ။");
-                }
-                updateUI();
-                return;
-            }
-
-            // Lock this device immediately so user cannot refresh mid-spin to spin again
-            const claimRecord = {
-                playerName: playerName,
-                code: playerCode,
-                prizeLabel: wonPrizeData.label,
-                claimedAt: claimedTimestamp
-            };
-            setLocalClaimRecord(claimRecord);
-
-            // Animate Wheel smoothly to land exactly on `wonPrizeIndex`
-            animateWheelToSlice(wonPrizeIndex, () => {
-                isSpinning = false;
-                sound.playWin();
-                fireConfetti();
-                openResultModal(claimRecord);
-                updateUI();
-            });
-        }
-
-        function animateWheelToSlice(targetIndex, onComplete) {
-            const sliceCount = gameState.prizes.length;
-            const arc = (Math.PI * 2) / sliceCount;
-
-            // Pointer is at -PI/2 (top). Slice i spans [rotation + i*arc - PI/2, rotation + (i+1)*arc - PI/2]
-            // To put center of slice `targetIndex` under the top pointer (-PI/2):
-            // rotation + (targetIndex + 0.5)*arc = 0 (mod 2*PI) => targetMod = 2*PI - (targetIndex + 0.5)*arc
-            const jitter = (Math.random() - 0.5) * (arc * 0.45);
-            const desiredMod = ((Math.PI * 2) - (targetIndex + 0.5) * arc + jitter + Math.PI * 4) % (Math.PI * 2);
-
-            const currentMod = ((currentRotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
-            let delta = desiredMod - currentMod;
-            if (delta < 0) delta += Math.PI * 2;
-
-            const extraSpins = 6 * Math.PI * 2; // 6 full dramatic rotations
-            const startRotation = currentRotation;
-            const totalRotation = extraSpins + delta;
-            const duration = 5200; // 5.2 seconds
-            const startTime = performance.now();
-
-            function frame(now) {
-                const elapsed = now - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                // Smooth quintic ease-out deceleration
-                const easeOut = 1 - Math.pow(1 - progress, 4);
-
-                currentRotation = startRotation + totalRotation * easeOut;
-
-                // Ticking peg sound effect
-                const normalizedAngle = (((-currentRotation) % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
-                const currentSlice = Math.floor(normalizedAngle / arc) % sliceCount;
-                if (currentSlice !== lastTickSlice) {
-                    lastTickSlice = currentSlice;
-                    sound.playTick();
-                }
-
-                drawWheel();
-
-                if (progress < 1) {
-                    requestAnimationFrame(frame);
-                } else {
-                    currentRotation = startRotation + totalRotation;
-                    drawWheel();
-                    if (onComplete) onComplete();
-                }
-            }
-
-            requestAnimationFrame(frame);
-        }
-
-        function fireConfetti() {
-            if (typeof confetti !== "function") return;
-            confetti({
-                particleCount: 90,
-                spread: 75,
-                origin: { y: 0.6 }
-            });
-            setTimeout(() => {
-                confetti({
-                    particleCount: 60,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 }
-                });
-                confetti({
-                    particleCount: 60,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 }
-                });
-            }, 350);
-        }
-
-        function openResultModal(record) {
-            modalWinnerName.textContent = record.playerName;
-            modalWinnerCode.textContent = `SPIN CODE: ${record.code}`;
-            modalWonPrize.textContent = record.prizeLabel;
-            modalTimestamp.textContent = `အချိန်: ${formatMyanmarTime(record.claimedAt)}`;
-            resultModal.classList.remove("hidden");
-            resultModal.classList.add("flex");
-        }
-
-        closeResultModalBtn.addEventListener("click", () => {
-            resultModal.classList.add("hidden");
-            resultModal.classList.remove("flex");
-        });
-
-        viewReceiptAgainBtn.addEventListener("click", () => {
-            const record = getLocalClaimRecord();
-            if (record) openResultModal(record);
-        });
-
-        centerSpinBtn.addEventListener("click", executeSpin);
-        mainSpinBtn.addEventListener("click", executeSpin);
-
-        // Sound Toggle
-        document.getElementById("soundToggleBtn").addEventListener("click", () => {
-            sound.muted = !sound.muted;
-            document.getElementById("soundOnIcon").classList.toggle("hidden", sound.muted);
-            document.getElementById("soundOffIcon").classList.toggle("hidden", !sound.muted);
-            showToast(sound.muted ? "အသံ ပိတ်လိုက်ပါပြီ" : "အသံ ဖွင့်လိုက်ပါပြီ");
-        });
-
-        // =========================================================================
-        // 8. HOST / ADMIN PANEL CONTROLS
-        // =========================================================================
-        openHostBtn.addEventListener("click", () => {
-            hostPinInput.value = "";
-            hostPinError.classList.add("hidden");
-            hostPinSection.classList.remove("hidden");
-            hostDashboardSection.classList.add("hidden");
-            resetConfirmBox.classList.add("hidden");
-            hostModal.classList.remove("hidden");
-            hostModal.classList.add("flex");
-        });
-
-        closeHostModalBtn.addEventListener("click", () => {
-            hostModal.classList.add("hidden");
-            hostModal.classList.remove("flex");
-        });
-
-        unlockHostBtn.addEventListener("click", () => {
-            if (hostPinInput.value.trim() === HOST_PIN) {
-                hostPinSection.classList.add("hidden");
-                hostDashboardSection.classList.remove("hidden");
-                renderHostPanelList();
-            } else {
-                hostPinError.classList.remove("hidden");
-            }
-        });
-
-        hostPinInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") unlockHostBtn.click();
-        });
-
-        copyAllCodesBtn.addEventListener("click", () => {
-            const lines = gameState.codes.map((c, i) =>
-                `${i + 1}. ${c.code} - ${c.used ? `ပြီး (${c.playerName}: ${c.prizeLabel})` : "အသုံးပြုနိုင်သည်"}`
-            );
-            copyTextFallback(`🎡 ကံစမ်းမဲ Spin Wheel ကုဒ် ၇ ခု:\n` + lines.join("\n"));
-        });
-
-        triggerResetBtn.addEventListener("click", () => {
-            resetConfirmBox.classList.remove("hidden");
-        });
-
-        cancelResetBtn.addEventListener("click", () => {
-            resetConfirmBox.classList.add("hidden");
-        });
-
-        confirmResetBtn.addEventListener("click", async () => {
-            const nextEpoch = (gameState.eventEpoch || 1) + 1;
-            const freshState = {
-                eventEpoch: nextEpoch,
-                prizes: JSON.parse(JSON.stringify(INITIAL_PRIZES)),
-                codes: JSON.parse(JSON.stringify(INITIAL_CODES))
-            };
-
-            try {
-                if (db && eventDocRef) {
-                    await setDoc(eventDocRef, freshState);
-                } else {
-                    gameState = freshState;
-                }
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
-                verifiedSession = null;
-                playerNameInput.value = "";
-                spinCodeInput.value = "";
-                resetConfirmBox.classList.add("hidden");
-                updateUI();
-                showToast("ပွဲအသစ် ပြန်လည်သတ်မှတ်ပြီးပါပြီ ✓");
-            } catch (err) {
-                showToast("ပြန်လည်သတ်မှတ်၍ မရပါ၊ ထပ်မံကြိုးစားပါ");
-            }
-        });
-
-        // =========================================================================
-        // 9. FIREBASE INITIALIZATION & REAL-TIME SYNC
-        // =========================================================================
-        async function initApp() {
-            window.addEventListener("resize", resizeCanvas);
-            resizeCanvas();
-
-            // Check URL param ?code=LUCKY1 for convenience if host shares direct link
-            try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const prefillCode = urlParams.get("code");
-                if (prefillCode) {
-                    spinCodeInput.value = prefillCode.toUpperCase();
-                }
-            } catch (e) {}
-
-            try {
-                if (typeof __firebase_config !== "undefined" && __firebase_config) {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-
-                    if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
-                        const cred = await signInWithCustomToken(auth, __initial_auth_token);
-                        currentUser = cred.user;
-                    } else {
-                        const cred = await signInAnonymously(auth);
-                        currentUser = cred.user;
-                    }
-
-                    // Strict Firestore Public Data Path
-                    eventDocRef = doc(db, "artifacts", appId, "public", "data", "spin_wheel_events", "main_7_players_event");
-
-                    onSnapshot(
-                        eventDocRef,
-                        async (docSnap) => {
-                            loadingBanner.classList.add("hidden");
-                            if (!docSnap.exists()) {
-                                // Initialize the 7-prize pool on first launch
-                                await setDoc(eventDocRef, gameState);
-                            } else {
-                                const data = docSnap.data();
-                                if (data && Array.isArray(data.prizes) && Array.isArray(data.codes)) {
-                                    gameState = {
-                                        eventEpoch: data.eventEpoch || 1,
-                                        prizes: data.prizes,
-                                        codes: data.codes
-                                    };
-                                }
-                                if (!isSpinning) {
-                                    updateUI();
-                                }
-                            }
-                        },
-                        (error) => {
-                            loadingBanner.classList.add("hidden");
-                            updateUI();
-                        }
-                    );
-                } else {
-                    loadingBanner.classList.add("hidden");
-                    updateUI();
-                }
-            } catch (err) {
-                loadingBanner.classList.add("hidden");
-                updateUI();
-            }
-        }
-
-        window.onload = initApp;
-    </script>
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
+
+    // Host Modal Functions
+    function openHostModal() {
+      document.getElementById("hostModal").classList.remove("hidden");
+      document.getElementById("hostModal").classList.add("flex");
+    }
+
+    function closeHostModal() {
+      document.getElementById("hostModal").classList.add("hidden");
+      document.getElementById("hostModal").classList.remove("flex");
+    }
+
+    function verifyPin() {
+      const pin = document.getElementById("hostPinInput").value.trim();
+      if (pin === HOST_PIN) {
+        document.getElementById("pinGate").classList.add("hidden");
+        document.getElementById("hostDashboard").classList.remove("hidden");
+        document.getElementById("pinError").classList.add("hidden");
+        renderHostDashboard();
+      } else {
+        document.getElementById("pinError").classList.remove("hidden");
+      }
+    }
+
+    function renderHostDashboard() {
+      const codeListEl = document.getElementById("codeStatusList");
+      codeListEl.innerHTML = VALID_CODES.map(code => {
+        const usedBy = appState.usedCodes[code];
+        return `
+          <div class="p-2 rounded-lg border ${usedBy ? 'bg-slate-900/50 border-slate-700 text-slate-500' : 'bg-slate-900 border-yellow-500/40 text-white'} flex justify-between items-center">
+            <span class="font-mono font-bold">${code}</span>
+            <span class="text-[10px]">${usedBy ? '✔ ' + usedBy : 'အသစ်'}</span>
+          </div>
+        `;
+      }).join("");
+
+      const logEl = document.getElementById("winnerLogList");
+      if (appState.winners.length === 0) {
+        logEl.innerHTML = `<p class="text-slate-500 text-center">မည်သူမျှ မလှည့်ရသေးပါ</p>`;
+      } else {
+        logEl.innerHTML = appState.winners.map((w, i) => `
+          <div class="p-2 rounded-lg bg-slate-800 border border-slate-700">
+            <div class="flex justify-between font-bold text-yellow-400">
+              <span>${i + 1}. ${w.name} (${w.code})</span>
+              <span class="text-[10px] text-slate-400">${w.time}</span>
+            </div>
+            <p class="text-white mt-0.5">${w.prize}</p>
+          </div>
+        `).join("");
+      }
+    }
+
+    function copyAllCodes() {
+      const text = VALID_CODES.map((c, i) => `${i + 1}. ${c}`).join("\n");
+      navigator.clipboard.writeText(text);
+      alert("ကုဒ် ၇ ခုလုံးကို Copy ကူးယူပြီးပါပြီ!");
+    }
+
+    function resetGame() {
+      if (!confirm("ဆုမဲများနှင့် စက် Lock များအားလုံးကို အစကနေ ပြန်စမှာ သေချာပါသလား?")) return;
+      localStorage.removeItem(DEVICE_LOCK_KEY);
+      appState = createFreshState();
+      currentRotation = 0;
+      document.getElementById("playerName").value = "";
+      document.getElementById("secretCode").value = "";
+      document.getElementById("errorMsg").classList.add("hidden");
+      saveState();
+      alert("Reset ချပြီးပါပြီ! ယခု စက်အားလုံးမှ ပြန်လှည့်နိုင်ပါပြီ။");
+    }
+
+    // Init
+    syncUI();
+  </script>
 </body>
 </html>
