@@ -27,120 +27,77 @@
 <body class="flex flex-col items-center justify-between p-4">
 
   <!-- Header -->
-  <header class="w-full max-w-lg flex justify-between items-center py-2">
+  <header class="w-full max-w-md flex justify-between items-center py-2">
     <div class="flex items-center gap-2">
       <span class="text-2xl">🎡</span>
       <h1 class="text-xl font-bold text-yellow-400">Lucky Spin</h1>
     </div>
-    <button onclick="openHostModal()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-full text-slate-300 transition">
-      🔐 ပွဲစီစဉ်သူ
+    <button onclick="resetWheel()" class="text-xs bg-red-600/80 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full font-bold transition shadow">
+      🔄 Reset ပြန်စမည်
     </button>
   </header>
 
   <!-- Main Content -->
-  <main class="w-full max-w-md flex flex-col items-center my-auto py-4">
+  <main class="w-full max-w-md flex flex-col items-center my-auto py-3">
     
     <!-- Wheel Container -->
     <div class="relative flex items-center justify-center mb-6">
       <div class="wheel-pointer absolute -top-4 z-20"></div>
       <div class="p-2 rounded-full bg-gradient-to-tr from-yellow-500 via-amber-300 to-yellow-600 shadow-2xl">
-        <canvas id="wheelCanvas" width="320" height="320" class="rounded-full bg-slate-900"></canvas>
+        <canvas id="wheelCanvas" width="330" height="330" class="rounded-full bg-slate-900"></canvas>
       </div>
       <div class="absolute w-12 h-12 rounded-full bg-slate-900 border-4 border-yellow-400 flex items-center justify-center shadow-lg z-10">
         <span class="text-yellow-400 font-bold text-xs">SPIN</span>
       </div>
     </div>
 
-    <!-- Status / Action Box -->
-    <div id="inputSection" class="w-full bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl">
-      <h2 class="text-center font-bold text-lg text-white mb-1">မဲနှိုက်ရန် အချက်အလက်ဖြည့်ပါ</h2>
-      <p class="text-center text-xs text-slate-400 mb-4">တစ်ဦးလျှင် တစ်ကြိမ်သာ လှည့်ခွင့်ရှိပါသည်</p>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs text-slate-300 mb-1">သင့်နာမည်</label>
-          <input id="playerName" type="text" placeholder="ဥပမာ - အောင်အောင်" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-400" />
-        </div>
-        <div>
-          <label class="block text-xs text-slate-300 mb-1">လျှို့ဝှက်ကုဒ် (Secret Code)</label>
-          <input id="secretCode" type="text" placeholder="LUCKY1" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-yellow-400" />
-        </div>
-        <p id="errorMsg" class="text-red-400 text-xs hidden text-center"></p>
-        <button id="spinBtn" onclick="startSpin()" class="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
-          🎯 စတင်လှည့်မည်
-        </button>
+    <!-- Spin Control Box -->
+    <div class="w-full bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-xl space-y-3">
+      <div>
+        <label class="block text-xs text-slate-300 mb-1">မဲနှိုက်မည့်သူ နာမည် (ထည့်လိုက ထည့်ပါ)</label>
+        <input id="playerName" type="text" placeholder="ဥပမာ - ပထမတစ်ယောက် / အောင်အောင်" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-400" />
       </div>
+      <button id="spinBtn" onclick="startSpin()" class="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95 text-base">
+        🎯 လှည့်မည်
+      </button>
     </div>
 
-    <!-- Already Played / Result Box -->
-    <div id="resultSection" class="w-full bg-slate-800/90 border border-yellow-500/50 rounded-2xl p-6 shadow-xl text-center hidden">
-      <div class="text-4xl mb-2">🎉</div>
-      <p class="text-sm text-slate-300" id="winnerLabel">ဂုဏ်ယူပါတယ်!</p>
-      <div class="my-3 p-4 bg-slate-900/90 border border-yellow-400/40 rounded-xl">
-        <p class="text-xs text-yellow-400 mb-1">သင်ရရှိသော ဆုမဲ</p>
-        <p id="wonPrizeText" class="text-lg font-bold text-white leading-snug"></p>
-      </div>
-      <p class="text-xs text-slate-400">ဤဆုမဲကို စာရင်းထဲမှ ပယ်ဖျက်ပြီး ဖြစ်ပါသည်။ တစ်ဦးလျှင် တစ်ကြိမ်သာ လှည့်ခွင့်ရှိပါသည်။</p>
-    </div>
-
-    <!-- Prizes List -->
-    <div class="w-full mt-5 bg-slate-900/60 border border-slate-800 rounded-xl p-3">
+    <!-- Remaining Prizes -->
+    <div class="w-full mt-4 bg-slate-900/70 border border-slate-800 rounded-xl p-3">
       <div class="flex justify-between items-center text-xs text-slate-400 mb-2">
-        <span>စုစုပေါင်း ဆုမဲ ၇ ဆု (တစ်ဆုလျှင် တစ်ဦးသာ)</span>
+        <span>ကျန်ရှိနေသော ဆုမဲများ (ပေါက်ပြီးသား ထပ်မပါတော့ပါ)</span>
         <span id="remainingCount" class="text-yellow-400 font-bold">7 / 7</span>
       </div>
       <div id="prizeTags" class="flex flex-wrap gap-1.5"></div>
     </div>
+
+    <!-- Winner History -->
+    <div class="w-full mt-4 bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+      <h3 class="text-xs font-bold text-yellow-400 mb-2">🏆 ဆုမဲပေါက်သူ စာရင်း</h3>
+      <div id="winnerLogList" class="space-y-2 text-xs max-h-56 overflow-y-auto">
+        <p class="text-slate-500 text-center py-2">မလှည့်ရသေးပါ</p>
+      </div>
+    </div>
+
   </main>
 
-  <footer class="text-center text-[11px] text-slate-500 py-2">
-    Fair & Unique Prize Lucky Draw System
-  </footer>
-
-  <!-- Host Modal -->
-  <div id="hostModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-lg text-yellow-400">🔐 ပွဲစီစဉ်သူ ထိန်းချုပ်ခန်း</h3>
-        <button onclick="closeHostModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+  <!-- Winner Popup Modal -->
+  <div id="winModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border-2 border-yellow-400 rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl transform transition">
+      <div class="text-5xl mb-2">🎉</div>
+      <h2 id="modalWinnerName" class="text-lg font-bold text-yellow-400">ဂုဏ်ယူပါတယ်!</h2>
+      <p class="text-xs text-slate-300 mt-1">ရရှိသော ဆုမဲမှာ</p>
+      <div class="my-4 p-4 bg-slate-900 border border-yellow-500/40 rounded-xl">
+        <p id="modalPrizeText" class="text-lg font-bold text-white leading-snug"></p>
       </div>
-
-      <!-- PIN Gate -->
-      <div id="pinGate" class="space-y-3">
-        <p class="text-xs text-slate-300">ဆက်လက်ကြည့်ရှုရန် PIN နံပါတ် ရိုက်ထည့်ပါ (Default: 1234)</p>
-        <input id="hostPinInput" type="password" placeholder="PIN" class="w-full bg-slate-900 border border-slate-600 rounded-xl px-3.5 py-2.5 text-sm text-white" />
-        <p id="pinError" class="text-red-400 text-xs hidden">PIN မှားယွင်းနေပါသည်</p>
-        <button onclick="verifyPin()" class="w-full bg-yellow-500 text-slate-950 font-bold py-2.5 rounded-xl">ဝင်မည်</button>
-      </div>
-
-      <!-- Host Dashboard -->
-      <div id="hostDashboard" class="hidden space-y-4">
-        <div>
-          <div class="flex justify-between items-center mb-1.5">
-            <span class="text-xs font-bold text-slate-300">တစ်ခါသုံး ကုဒ် ၇ ခု (ဆုမဲ မထပ်အောင် ခွဲဝေပြီး)</span>
-            <button onclick="copyAllCodes()" class="text-xs text-yellow-400 hover:underline">ကုဒ်အားလုံး ကူးယူမည်</button>
-          </div>
-          <div id="codeStatusList" class="grid grid-cols-2 gap-2 text-xs"></div>
-        </div>
-
-        <div>
-          <span class="block text-xs font-bold text-slate-300 mb-1.5">ဤစက်မှ လှည့်ထားသော စာရင်း</span>
-          <div id="winnerLogList" class="space-y-2 text-xs bg-slate-900 p-3 rounded-xl max-h-48 overflow-y-auto">
-            <p class="text-slate-500 text-center">မည်သူမျှ မလှည့်ရသေးပါ</p>
-          </div>
-        </div>
-
-        <div class="pt-2 border-t border-slate-700">
-          <button onclick="resetGame()" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2.5 rounded-xl text-sm transition">
-            🔄 Reset ပြန်ချမည် (Device Lock ပါ ဖြုတ်မည်)
-          </button>
-        </div>
-      </div>
+      <p class="text-[11px] text-slate-400 mb-4">ဤဆုမဲကို Wheel ပေါ်မှ ဖယ်ရှားပြီး ဖြစ်ပါသည်။</p>
+      <button onclick="closeWinModal()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-2.5 rounded-xl">
+        အိုကေ (နောက်တစ်ယောက် ဆက်လှည့်မည်)
+      </button>
     </div>
   </div>
 
   <script>
-    // 7 Exact Unique Prizes
     const INITIAL_PRIZES = [
       { id: 1, label: "30000MMK", short: "30,000 MMK", color: "#ef4444" },
       { id: 2, label: "20000MMK", short: "20,000 MMK", color: "#f59e0b" },
@@ -151,32 +108,14 @@
       { id: 7, label: "5000MMK + Mingalar Mandalay Swimming Pool Pass 2 Ticket + PUPA Oil Sheet", short: "5,000 + Pool & Oil", color: "#14b8a6" }
     ];
 
-    // Guaranteed 1-to-1 non-repeating mapping between the 7 codes and the 7 prizes
-    // Ensures across 7 separate phones: 1x 30k, 2x 20k, 3x 10k, 1x 5k+Pool+Oil (Zero duplicates!)
-    const CODE_TO_PRIZE_ID = {
-      "LUCKY1": 4, // 10,000 MMK
-      "LUCKY2": 2, // 20,000 MMK
-      "LUCKY3": 7, // 5,000 + Pool & Oil
-      "LUCKY4": 1, // 30,000 MMK
-      "LUCKY5": 5, // 10,000 MMK
-      "LUCKY6": 3, // 20,000 MMK
-      "LUCKY7": 6  // 10,000 MMK
-    };
-
-    const VALID_CODES = Object.keys(CODE_TO_PRIZE_ID);
-    const HOST_PIN = "1234";
-    const STORAGE_KEY = "lucky_spin_state_v3";
-    const DEVICE_LOCK_KEY = "lucky_spin_device_lock_v3";
-
+    const STORAGE_KEY = "single_host_spin_wheel_v1";
     let appState = loadState();
     let currentRotation = 0;
     let isSpinning = false;
 
     function createFreshState() {
       return {
-        sessionId: "session_" + Date.now(),
         prizes: INITIAL_PRIZES.map(p => ({ ...p, claimed: false })),
-        usedCodes: {},
         winners: []
       };
     }
@@ -186,9 +125,7 @@
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && parsed.sessionId && Array.isArray(parsed.prizes)) {
-            return parsed;
-          }
+          if (parsed && Array.isArray(parsed.prizes)) return parsed;
         }
       } catch (e) {}
       const fresh = createFreshState();
@@ -198,24 +135,7 @@
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      syncUI();
-    }
-
-    function checkDeviceLock() {
-      try {
-        const lockRaw = localStorage.getItem(DEVICE_LOCK_KEY);
-        if (!lockRaw) return null;
-        const lockData = JSON.parse(lockRaw);
-        if (lockData.sessionId === appState.sessionId) {
-          return lockData;
-        } else {
-          localStorage.removeItem(DEVICE_LOCK_KEY);
-          return null;
-        }
-      } catch (e) {
-        localStorage.removeItem(DEVICE_LOCK_KEY);
-        return null;
-      }
+      renderUI();
     }
 
     function drawWheel() {
@@ -224,15 +144,17 @@
       const size = canvas.width;
       const center = size / 2;
       const radius = center - 6;
-      
-      // Only show unclaimed prizes on the wheel so won prizes are completely removed!
-      const activePrizes = appState.prizes.filter(p => !p.claimed);
-      const displayPrizes = activePrizes.length > 0 ? activePrizes : [{ short: "ဆုမဲကုန်ပါပြီ", color: "#334155", claimed: true }];
-      const sliceAngle = (2 * Math.PI) / displayPrizes.length;
 
+      // Only active (unclaimed) prizes are drawn on the wheel
+      const activePrizes = appState.prizes.filter(p => !p.claimed);
+      const displayList = activePrizes.length > 0 
+        ? activePrizes 
+        : [{ short: "ဆုမဲ ၇ ဆုလုံး ကုန်ပါပြီ", color: "#334155" }];
+      
+      const sliceAngle = (2 * Math.PI) / displayList.length;
       ctx.clearRect(0, 0, size, size);
 
-      displayPrizes.forEach((prize, i) => {
+      displayList.forEach((prize, i) => {
         const startAngle = currentRotation + i * sliceAngle - Math.PI / 2;
         const endAngle = startAngle + sliceAngle;
 
@@ -247,93 +169,84 @@
         ctx.strokeStyle = "#0f172a";
         ctx.stroke();
 
-        // Text
+        // Draw Label
         ctx.save();
         ctx.translate(center, center);
         ctx.rotate(startAngle + sliceAngle / 2);
         ctx.textAlign = "right";
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 12px Padauk, sans-serif";
-        ctx.fillText(prize.short, radius - 14, 4);
+        ctx.font = "bold 13px Padauk, sans-serif";
+        ctx.fillText(prize.short, radius - 16, 5);
         ctx.restore();
       });
     }
 
-    function syncUI() {
+    function renderUI() {
       drawWheel();
 
-      const remaining = appState.prizes.filter(p => !p.claimed);
-      document.getElementById("remainingCount").textContent = `${remaining.length} / ${appState.prizes.length}`;
+      const activePrizes = appState.prizes.filter(p => !p.claimed);
+      document.getElementById("remainingCount").textContent = `${activePrizes.length} / ${appState.prizes.length}`;
 
-      const tagsEl = document.getElementById("prizeTags");
-      tagsEl.innerHTML = appState.prizes.map(p => `
-        <span class="px-2 py-0.5 rounded text-[11px] ${p.claimed ? 'bg-slate-800/50 text-slate-600 line-through' : 'bg-slate-800 text-slate-200 border border-slate-700'}">
+      const spinBtn = document.getElementById("spinBtn");
+      if (activePrizes.length === 0) {
+        spinBtn.disabled = true;
+        spinBtn.textContent = "✅ ဆုမဲ ၇ ဆုလုံး ထွက်ရှိပြီးပါပြီ";
+        spinBtn.classList.add("opacity-50", "cursor-not-allowed");
+      } else if (!isSpinning) {
+        spinBtn.disabled = false;
+        spinBtn.textContent = `🎯 လှည့်မည် (ကျန် ${activePrizes.length} ဆု)`;
+        spinBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      }
+
+      // Tags
+      document.getElementById("prizeTags").innerHTML = appState.prizes.map(p => `
+        <span class="px-2 py-0.5 rounded text-[11px] ${p.claimed ? 'bg-slate-800/40 text-slate-600 line-through' : 'bg-slate-800 text-slate-200 border border-slate-700'}">
           ${p.short}
         </span>
       `).join("");
 
-      const lockInfo = checkDeviceLock();
-      const inputSec = document.getElementById("inputSection");
-      const resultSec = document.getElementById("resultSection");
-
-      if (lockInfo && !isSpinning) {
-        inputSec.classList.add("hidden");
-        resultSec.classList.remove("hidden");
-        document.getElementById("winnerLabel").textContent = `ဂုဏ်ယူပါတယ် ${lockInfo.name}!`;
-        document.getElementById("wonPrizeText").textContent = lockInfo.prize;
-      } else if (!isSpinning) {
-        inputSec.classList.remove("hidden");
-        resultSec.classList.add("hidden");
+      // Winner History
+      const logEl = document.getElementById("winnerLogList");
+      if (appState.winners.length === 0) {
+        logEl.innerHTML = `<p class="text-slate-500 text-center py-2">မလှည့်ရသေးပါ</p>`;
+      } else {
+        logEl.innerHTML = appState.winners.map((w, i) => `
+          <div class="p-2.5 rounded-lg bg-slate-800 border border-slate-700 flex justify-between items-start gap-2">
+            <div>
+              <span class="font-bold text-yellow-400">${i + 1}. ${w.name}</span>
+              <p class="text-white mt-0.5">${w.prize}</p>
+            </div>
+            <span class="text-[10px] text-slate-400 shrink-0">${w.time}</span>
+          </div>
+        `).join("");
       }
-
-      renderHostDashboard();
     }
 
     function startSpin() {
       if (isSpinning) return;
 
-      const name = document.getElementById("playerName").value.trim();
-      const code = document.getElementById("secretCode").value.trim().toUpperCase();
-      const errorEl = document.getElementById("errorMsg");
-
-      errorEl.classList.add("hidden");
-
-      if (!name) {
-        showError("ကျေးဇူးပြု၍ သင့်နာမည် ရိုက်ထည့်ပါ။");
-        return;
-      }
-      if (!VALID_CODES.includes(code)) {
-        showError("လျှို့ဝှက်ကုဒ် မှားယွင်းနေပါသည်။");
-        return;
-      }
-      if (appState.usedCodes[code]) {
-        showError("ဤကုဒ်ကို အသုံးပြုပြီး ဖြစ်ပါသည်။");
-        return;
-      }
-
-      const targetPrizeId = CODE_TO_PRIZE_ID[code];
       const activePrizes = appState.prizes.filter(p => !p.claimed);
-      const activeIndex = activePrizes.findIndex(p => p.id === targetPrizeId);
-      const prizeObjIndex = appState.prizes.findIndex(p => p.id === targetPrizeId);
+      if (activePrizes.length === 0) return;
 
-      if (activeIndex === -1 || prizeObjIndex === -1) {
-        showError("ဤကုဒ်၏ ဆုမဲကို ထုတ်ယူပြီး ဖြစ်ပါသည်။");
-        return;
-      }
+      const rawName = document.getElementById("playerName").value.trim();
+      const playerName = rawName || `အမှတ်စဉ် (${appState.winners.length + 1})`;
 
-      const wonPrize = appState.prizes[prizeObjIndex];
+      // Pick random index from ONLY remaining active prizes
+      const winActiveIdx = Math.floor(Math.random() * activePrizes.length);
+      const wonPrize = activePrizes[winActiveIdx];
 
       isSpinning = true;
-      document.getElementById("spinBtn").disabled = true;
-      document.getElementById("spinBtn").textContent = "🎡 လှည့်နေပါသည်...";
+      const spinBtn = document.getElementById("spinBtn");
+      spinBtn.disabled = true;
+      spinBtn.textContent = "🎡 လှည့်နေပါသည်...";
 
-      // Calculate target rotation on the CURRENT active wheel before removing the slice
+      // Calculate exact stop angle so top pointer hits winActiveIdx
       const sliceAngle = (2 * Math.PI) / activePrizes.length;
-      const sliceCenter = activeIndex * sliceAngle + sliceAngle / 2;
+      const sliceCenter = winActiveIdx * sliceAngle + sliceAngle / 2;
       const extraSpins = 6 * 2 * Math.PI;
       const targetRotation = extraSpins + (2 * Math.PI - sliceCenter);
 
-      const duration = 4500;
+      const duration = 4000;
       const startTime = performance.now();
       const startRot = currentRotation % (2 * Math.PI);
 
@@ -348,110 +261,49 @@
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          // After spin finishes, permanently remove this prize from the wheel & lock device
-          appState.prizes[prizeObjIndex].claimed = true;
-          appState.usedCodes[code] = name;
+          // Mark this exact prize as claimed so it is permanently removed from future spins
+          const originalIdx = appState.prizes.findIndex(p => p.id === wonPrize.id);
+          if (originalIdx !== -1) {
+            appState.prizes[originalIdx].claimed = true;
+          }
+
           appState.winners.push({
-            name,
-            code,
+            name: playerName,
             prize: wonPrize.label,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           });
 
-          localStorage.setItem(DEVICE_LOCK_KEY, JSON.stringify({
-            sessionId: appState.sessionId,
-            name,
-            code,
-            prize: wonPrize.label
-          }));
-
           isSpinning = false;
-          currentRotation = 0; // Reset wheel angle cleanly for remaining slices
-          document.getElementById("spinBtn").disabled = false;
-          document.getElementById("spinBtn").textContent = "🎯 စတင်လှည့်မည်";
-          confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+          currentRotation = 0; // Reset angle cleanly for the remaining slices
+          document.getElementById("playerName").value = "";
           saveState();
+
+          // Show Popup
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          document.getElementById("modalWinnerName").textContent = `ဂုဏ်ယူပါတယ် ${playerName}!`;
+          document.getElementById("modalPrizeText").textContent = wonPrize.label;
+          document.getElementById("winModal").classList.remove("hidden");
+          document.getElementById("winModal").classList.add("flex");
         }
       }
 
       requestAnimationFrame(animate);
     }
 
-    function showError(msg) {
-      const el = document.getElementById("errorMsg");
-      el.textContent = msg;
-      el.classList.remove("hidden");
+    function closeWinModal() {
+      document.getElementById("winModal").classList.add("hidden");
+      document.getElementById("winModal").classList.remove("flex");
     }
 
-    function openHostModal() {
-      document.getElementById("hostModal").classList.remove("hidden");
-      document.getElementById("hostModal").classList.add("flex");
-    }
-
-    function closeHostModal() {
-      document.getElementById("hostModal").classList.add("hidden");
-      document.getElementById("hostModal").classList.remove("flex");
-    }
-
-    function verifyPin() {
-      const pin = document.getElementById("hostPinInput").value.trim();
-      if (pin === HOST_PIN) {
-        document.getElementById("pinGate").classList.add("hidden");
-        document.getElementById("hostDashboard").classList.remove("hidden");
-        document.getElementById("pinError").classList.add("hidden");
-        renderHostDashboard();
-      } else {
-        document.getElementById("pinError").classList.remove("hidden");
-      }
-    }
-
-    function renderHostDashboard() {
-      const codeListEl = document.getElementById("codeStatusList");
-      codeListEl.innerHTML = VALID_CODES.map(code => {
-        const usedBy = appState.usedCodes[code];
-        return `
-          <div class="p-2 rounded-lg border ${usedBy ? 'bg-slate-900/50 border-slate-700 text-slate-500' : 'bg-slate-900 border-yellow-500/40 text-white'} flex justify-between items-center">
-            <span class="font-mono font-bold">${code}</span>
-            <span class="text-[10px]">${usedBy ? '✔ ' + usedBy : 'အသစ်'}</span>
-          </div>
-        `;
-      }).join("");
-
-      const logEl = document.getElementById("winnerLogList");
-      if (appState.winners.length === 0) {
-        logEl.innerHTML = `<p class="text-slate-500 text-center">မည်သူမျှ မလှည့်ရသေးပါ</p>`;
-      } else {
-        logEl.innerHTML = appState.winners.map((w, i) => `
-          <div class="p-2 rounded-lg bg-slate-800 border border-slate-700">
-            <div class="flex justify-between font-bold text-yellow-400">
-              <span>${i + 1}. ${w.name} (${w.code})</span>
-              <span class="text-[10px] text-slate-400">${w.time}</span>
-            </div>
-            <p class="text-white mt-0.5">${w.prize}</p>
-          </div>
-        `).join("");
-      }
-    }
-
-    function copyAllCodes() {
-      const text = VALID_CODES.map((c, i) => `${i + 1}. ${c}`).join("\n");
-      navigator.clipboard.writeText(text);
-      alert("ကုဒ် ၇ ခုလုံးကို Copy ကူးယူပြီးပါပြီ!");
-    }
-
-    function resetGame() {
-      if (!confirm("ဆုမဲများနှင့် စက် Lock များအားလုံးကို အစကနေ ပြန်စမှာ သေချာပါသလား?")) return;
-      localStorage.removeItem(DEVICE_LOCK_KEY);
+    function resetWheel() {
+      if (!confirm("ဆုမဲ ၇ ဆုလုံးကို အစကနေ ပြန်စမှာ သေချာပါသလား?")) return;
       appState = createFreshState();
       currentRotation = 0;
       document.getElementById("playerName").value = "";
-      document.getElementById("secretCode").value = "";
-      document.getElementById("errorMsg").classList.add("hidden");
       saveState();
-      alert("Reset ချပြီးပါပြီ! ယခု ပြန်လှည့်နိုင်ပါပြီ။");
     }
 
-    syncUI();
+    renderUI();
   </script>
 </body>
 </html>
